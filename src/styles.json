@@ -1,0 +1,162 @@
+{
+  "container": {
+    "padding": "20px",
+    "background": "linear-gradient(135deg, #f5f5f7, #ffffff)",    
+    "color": "#333333",
+    "fontFamily": "Inter, Roboto, sans-serif"
+  },
+  "header": {
+    "textAlign": "center",
+    "marginBottom": "30px",
+    "fontSize": "2.5rem",
+    "fontWeight": "700",
+    "color": "#1C1C1C"
+  },
+  "resetButton": {
+    "marginBottom": "20px",
+    "backgroundColor": "#EF4444",
+    "color": "white",
+    "padding": "10px 20px",
+    "borderRadius": "12px",
+    "border": "none",
+    "cursor": "pointer",
+    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.15)",
+    "transition": "all 0.3s ease",
+    "hover": {
+      "backgroundColor": "#DC2626"
+    }
+  },
+  "saveButton": {
+    "marginBottom": "20px",
+    "backgroundColor": "#3B82F6",
+    "color": "white",
+    "padding": "10px 20px",
+    "borderRadius": "12px",
+    "border": "none",
+    "cursor": "pointer",
+    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.15)",
+    "transition": "all 0.3s ease",
+    "hover": {
+      "backgroundColor": "#365F76"
+    }
+  },
+  "loadButton": {
+    "marginBottom": "20px",
+    "backgroundColor": "#29ddce",
+    "color": "white",
+    "padding": "10px 20px",
+    "borderRadius": "12px",
+    "border": "none",
+    "cursor": "pointer",
+    "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.15)",
+    "transition": "all 0.3s ease",
+    "hover": {
+      "backgroundColor": "#16B0A1"
+    }
+  },
+  "teamContainer": {
+    "display": "flex",
+    "justifyContent": "space-between",
+    "gap": "24px",
+    "flexWrap": "wrap",
+    "padding": "20px"
+  },
+  "teamPanel": {
+    "flex": "1",
+    "minWidth": "250px",
+    "padding": "16px",
+    "borderRadius": "16px",
+    "background": "rgba(255, 255, 255, 0.85)",
+    "backdropFilter": "blur(10px)",
+    "boxShadow": "0 2px 10px rgba(0, 0, 0, 0.1)"
+  },
+  "pokemonContainer": {
+    "display": "flex",
+    "gap": "12px",
+    "flexWrap": "wrap",
+    "justifyContent": "center"
+  },
+  "pokemonCard": {
+    "textAlign": "center",
+    "background": "linear-gradient(135deg, #f5f5f7, #ffffff)",
+    "padding": "8px",
+    "borderRadius": "12px",
+    "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.1)"
+  },
+  "pokemonImage": {
+    "width": "48px",
+    "height": "48px",
+    "borderRadius": "12px"
+  },
+  "pokemonName": {
+    "fontSize": "14px",
+    "color": "#333333"
+  },
+  "routePanel": {
+    "marginTop": "32px",
+    "backgroundColor": "rgba(255, 255, 255, 0.85)",
+    "padding": "16px",
+    "borderRadius": "16px",
+    "boxShadow": "0 0 10px rgba(0,0,0,0.3)",
+    "backdropFilter": "blur(10px)",
+    "transition": "box-shadow 0.3s ease"
+  },
+ "routePanelActive": {
+    "boxShadow": "0 0 20px rgba(30, 144, 255, 1)", 
+    "border": "2px solid #3B82F6"
+  },
+  "routeHeader": {
+    "display": "flex",
+    "alignItems": "center",
+    "justifyContent": "space-between",
+    "fontSize": "1.5rem",
+    "color": "#333333"
+  },
+  "inputContainer": {
+    "display": "flex",
+    "gap": "20px",
+    "flexWrap": "wrap"
+  },
+  "inputPanel": {
+    "flex": "1",
+    "minWidth": "220px",
+    "backgroundColor": "rgba(255, 255, 255, 0.85)",
+    "padding": "12px",
+    "borderRadius": "12px",
+    "backdropFilter": "blur(5px)"
+  },
+  "inputField": {
+    "width": "100%",
+    "marginBottom": "6px",
+    "padding": "6px",
+    "backgroundColor": "rgba(255, 255, 255, 0.8)",
+    "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.1)",
+    "color": "#333333",
+    "border": "none",
+    "borderRadius": "6px"
+  },
+  "selectField": {
+    "width": "100%",
+    "marginBottom": "6px",
+    "padding": "6px",
+    "backgroundColor": "rgba(255, 255, 255, 0.8)",
+    "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.1)",
+    "color": "#333333",
+    "border": "none",
+    "borderRadius": "6px"
+  },
+  "pokemonImageSmall": {
+    "width": "48px",
+    "height": "48px",
+    "marginTop": "4px"
+  },
+  "bossPanel": {
+    "marginTop": "16px",
+    "padding": "24px",
+    "borderRadius": "8px",
+    "display": "flex",
+    "alignItems": "center",
+    "background": "#F4F4F9",
+    "justifyContent": "space-between"
+  }
+}

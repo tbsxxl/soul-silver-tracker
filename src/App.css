@@ -1,0 +1,173 @@
+import { useEffect, useState } from "react";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC45cCbZ0cV6uVj0lDAFvTlOnTsvQXw5Sk",
+  authDomain: "pokemonvoto.firebaseapp.com",
+  projectId: "pokemonvoto",
+  storageBucket: "pokemonvoto.appspot.com",
+  messagingSenderId: "444050797910",
+  appId: "1:444050797910:web:4e88354668608e6951d2f7"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const soulSilverRoutes = [
+  "New Bark Town", "Route 29", "Route 46", "Cherrygrove City",
+  "Route 30", "Route 31", "Dark Cave", "Violet City",
+  "Sprout Tower", "Route 32", "Ruins of Alph", "Union Cave"
+];
+
+const statusOptions = ["Captured", "Missed", "Fainted", "Received"];
+
+const natureOptions = [
+  "Hardy", "Lonely", "Brave", "Adamant", "Naughty",
+  "Bold", "Docile", "Relaxed", "Impish", "Lax",
+  "Timid", "Hasty", "Serious", "Jolly", "Naive",
+  "Modest", "Mild", "Quiet", "Bashful", "Rash",
+  "Calm", "Gentle", "Sassy", "Careful", "Quirky"
+];
+
+const bossData = [
+  { name: "Silver", location: "Cherrygrove City" },
+  { name: "Elder Li", location: "Sprout Tower" },
+  { name: "Falkner", location: "Violet City Gym", levelCap: 13 }
+];
+
+export default function NuzlockeKoopTracker() {
+  const [encounters, setEncounters] = useState({});
+  const [defeatedBosses, setDefeatedBosses] = useState([]);
+  const sessionId = "soulsilver_duo";
+
+  useEffect(() => {
+    const ref = doc(db, "sessions", sessionId);
+    const unsub = onSnapshot(ref, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setEncounters(data.encounters || {});
+        setDefeatedBosses(data.defeatedBosses || []);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const saveToFirestore = async (updatedEncounters, updatedBosses) => {
+    const ref = doc(db, "sessions", sessionId);
+    await setDoc(ref, {
+      encounters: updatedEncounters,
+      defeatedBosses: updatedBosses
+    });
+  };
+
+  const updateEncounter = (route, player, field, value) => {
+    const updated = {
+      ...encounters,
+      [route]: {
+        ...encounters[route],
+        [player]: {
+          ...encounters[route]?.[player],
+          [field]: value,
+        }
+      }
+    };
+    setEncounters(updated);
+    saveToFirestore(updated, defeatedBosses);
+  };
+
+  const toggleBossDefeated = (bossName) => {
+    const updated = defeatedBosses.includes(bossName)
+      ? defeatedBosses.filter(b => b !== bossName)
+      : [...defeatedBosses, bossName];
+    setDefeatedBosses(updated);
+    saveToFirestore(encounters, updated);
+  };
+
+  const inputStyle = {
+    display: "block",
+    marginBottom: "0.5rem",
+    padding: "0.4rem 0.6rem",
+    width: "100%",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    fontSize: "0.95rem"
+  };
+
+  return (
+    <div style={{ padding: "2rem", maxWidth: "960px", margin: "0 auto", fontFamily: "Arial, sans-serif", color: "#222" }}>
+      <h1 style={{ fontSize: "2.4rem", fontWeight: "bold", textAlign: "center", marginBottom: "2rem" }}>🔴 Pokémon SoulSilver Duo Tracker</h1>
+
+      <div>
+        <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>🗺️ Encounters</h2>
+        {soulSilverRoutes.map(route => (
+          <div key={route} style={{ borderTop: "1px solid #eee", paddingTop: "1rem", marginTop: "1.5rem" }}>
+            <h3 style={{ marginBottom: "0.5rem", color: "#444" }}>{route}</h3>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              {['Player 1', 'Player 2'].map(player => (
+                <div key={player} style={{ flex: "1 1 45%", minWidth: "260px", background: "#f9f9f9", padding: "1rem", borderRadius: "8px" }}>
+                  <h4 style={{ marginBottom: "0.5rem", color: "#666" }}>{player}</h4>
+                  <input
+                    placeholder="Pokémon Name"
+                    value={encounters[route]?.[player]?.pokemon || ""}
+                    onChange={(e) => updateEncounter(route, player, "pokemon", e.target.value)}
+                    style={inputStyle}
+                  />
+                  <input
+                    placeholder="Nickname"
+                    value={encounters[route]?.[player]?.nickname || ""}
+                    onChange={(e) => updateEncounter(route, player, "nickname", e.target.value)}
+                    style={inputStyle}
+                  />
+                  <select
+                    value={encounters[route]?.[player]?.status || ""}
+                    onChange={(e) => updateEncounter(route, player, "status", e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="">Select Status</option>
+                    {statusOptions.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={encounters[route]?.[player]?.nature || ""}
+                    onChange={(e) => updateEncounter(route, player, "nature", e.target.value)}
+                    style={inputStyle}
+                  >
+                    <option value="">Select Nature</option>
+                    {natureOptions.map(nature => (
+                      <option key={nature} value={nature}>{nature}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: "3rem" }}>
+        <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>👊 Boss Progress</h2>
+        <div>
+          {bossData.map(boss => (
+            <div key={boss.name} style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1rem", marginTop: "1rem", background: "#f5f5f5" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <p style={{ fontWeight: "bold", fontSize: "1.1rem" }}>{boss.name}</p>
+                  <p style={{ fontSize: "0.9rem", color: "#555" }}>{boss.location}</p>
+                  {boss.levelCap && <p style={{ fontSize: "0.8rem" }}>Level Cap: {boss.levelCap}</p>}
+                </div>
+                <button
+                  onClick={() => toggleBossDefeated(boss.name)}
+                  style={{ padding: "0.5rem 1rem", background: defeatedBosses.includes(boss.name) ? "#4caf50" : "#ccc", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                >
+                  {defeatedBosses.includes(boss.name) ? "✅ Defeated" : "Mark as Defeated"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

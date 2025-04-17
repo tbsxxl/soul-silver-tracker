@@ -1,0 +1,356 @@
+import React, { useEffect, useState } from "react";
+import allRoutes from "./soulsilver_all_routes.json";
+import allBosses from "./soulsilver_all_bosses.json";
+import pokemonList from "./pokemonList.json";
+
+const getSpriteUrl = (name) =>
+  name
+    ? `https://play.pokemonshowdown.com/sprites/gen4/${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.png`
+    : "https://play.pokemonshowdown.com/sprites/itemicons/poke-ball.png";
+
+const statusIcons = {
+  Captured: "✅",
+  Dead: "💀",
+  Missed: "🌬️",
+  Received: "🎁",
+  Shiny: "✨",
+  Traded: "🔄",
+  Trash: "🗑️",
+};
+
+const statusColors = {
+  Captured: "#3B82F6",  // Blau
+  Dead: "#EF4444",      // Rot
+  Missed: "#9E9E9E",    // Grau
+  Received: "#22C55E",   // Grün
+  Shiny: "#FBBF24",      // Gold
+  Traded: "#FB923C",     // Orange
+  Trash: "#6B7280",      // Dunkelgrau
+};
+
+function App() {
+  const [encounters, setEncounters] = useState({});
+  const [defeatedBosses, setDefeatedBosses] = useState([]);
+  const sessionId = "soulsilver_duo";
+
+  useEffect(() => {
+    const saved = localStorage.getItem(sessionId);
+    if (saved) {
+      const data = JSON.parse(saved);
+      setEncounters(data.encounters || {});
+      setDefeatedBosses(data.defeatedBosses || []);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      sessionId,
+      JSON.stringify({ encounters, defeatedBosses })
+    );
+  }, [encounters, defeatedBosses]);
+
+  const updateEncounter = (route, player, field, value) => {
+    const updated = {
+      ...encounters,
+      [route]: {
+        ...encounters[route],
+        [player]: {
+          ...encounters[route]?.[player],
+          [field]: value,
+        },
+      },
+    };
+    setEncounters(updated);
+  };
+
+  const toggleTeam = (route) => {
+    const isInTeam = encounters[route]?.inTeam;
+    const teamCount = Object.values(encounters).filter(
+      (encounter) => encounter?.inTeam
+    ).length;
+
+    if (teamCount < 6 || isInTeam) {
+      setEncounters({
+        ...encounters,
+        [route]: { ...encounters[route], inTeam: !isInTeam },
+      });
+    }
+  };
+
+  const toggleBoss = (boss) => {
+    setDefeatedBosses((prev) =>
+      prev.includes(boss) ? prev.filter((b) => b !== boss) : [...prev, boss]
+    );
+  };
+
+  const reset = () => {
+    if (window.confirm("Möchtest du den Tracker wirklich zurücksetzen?")) {
+      setEncounters({});
+      setDefeatedBosses([]);
+      localStorage.removeItem(sessionId);
+    }
+  };
+
+  const players = ["p1", "p2"];
+  const statusOptions = [
+    "Captured",
+    "Dead",
+    "Missed",
+    "Received",
+    "Shiny",
+    "Traded",
+    "Trash",
+  ];
+
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.header}>Pokémon SoulSilver Tracker</h1>
+      <button onClick={reset} style={styles.resetButton}>
+        🔁 Reset Tracker
+      </button>
+
+      <div style={styles.teamContainer}>
+        {players.map((player) => (
+          <div key={player} style={styles.teamPanel}>
+            <h3>{player.toUpperCase()} – Current Team</h3>
+            <div style={styles.pokemonContainer}>
+              {Object.entries(encounters)
+                .filter(([_, data]) => data?.inTeam)
+                .map(([route, data]) => {
+                  const entry = data[player];
+                  return (
+                    entry?.name && (
+                      <div key={route} style={styles.pokemonCard}>
+                        <img
+                          src={getSpriteUrl(entry.name)}
+                          alt={entry.name}
+                          style={styles.pokemonImage}
+                        />
+                        <div style={styles.pokemonName}>{entry.nickname || ""}</div>
+                      </div>
+                    )
+                  );
+                })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {allRoutes.map((route) => (
+        <div key={route} style={styles.routePanel}>
+          <h2 style={styles.routeHeader}>
+            {route}
+            <label>
+              <input
+                type="checkbox"
+                checked={!!encounters[route]?.inTeam}
+                onChange={() => toggleTeam(route)}
+              />{" "}
+              Im Team
+            </label>
+          </h2>
+
+          <div style={styles.inputContainer}>
+            {players.map((playerKey) => {
+              const entry = encounters[route]?.[playerKey] || {};
+              return (
+                <div key={playerKey} style={styles.inputPanel}>
+                  <input
+                    list="pokemon-list"
+                    value={entry.name || ""}
+                    placeholder="Pokémon"
+                    style={styles.inputField}
+                    onChange={(e) =>
+                      updateEncounter(route, playerKey, "name", e.target.value)
+                    }
+                  />
+                  <input
+                    value={entry.nickname || ""}
+                    placeholder="Nickname"
+                    style={styles.inputField}
+                    onChange={(e) =>
+                      updateEncounter(route, playerKey, "nickname", e.target.value)
+                    }
+                  />
+                  <select
+                    value={entry.status || ""}
+                    onChange={(e) =>
+                      updateEncounter(route, playerKey, "status", e.target.value)
+                    }
+                    style={{
+                      ...styles.selectField,
+                      background: statusColors[entry.status] || "#333",
+                    }}
+                  >
+                    <option value="" disabled hidden>Status</option>
+                    {statusOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {statusIcons[s]} {s}
+                      </option>
+                    ))}
+                  </select>
+                  <img
+                    src={getSpriteUrl(entry.name)}
+                    alt={entry.name}
+                    style={styles.pokemonImageSmall}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {allBosses
+            .filter((boss) => boss.after === route)
+            .map((boss) => (
+              <div
+                key={boss.name}
+                style={{
+                  ...styles.bossPanel,
+                  backgroundColor: defeatedBosses.includes(boss.name)
+                    ? "#24572c"
+                    : "#333",
+                }}
+              >
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={defeatedBosses.includes(boss.name)}
+                    onChange={() => toggleBoss(boss.name)}
+                  />{" "}
+                  <strong>{boss.name}</strong> – {boss.location}
+                </label>
+                <img src={boss.sprite} alt={boss.name} height={40} />
+              </div>
+            ))}
+        </div>
+      ))}
+
+      <datalist id="pokemon-list">
+        {pokemonList.map((p) => (
+          <option key={p} value={p} />
+        ))}
+      </datalist>
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    padding: 20,
+    backgroundColor: "#261e32",
+    color: "white",
+    fontFamily: "Inter, Roboto, sans-serif",
+  },
+  header: {
+    textAlign: "center",
+    marginBottom: 30,
+    fontSize: "2.5rem",
+    fontWeight: "bold",
+    color: "#F2F2F2",
+  },
+  resetButton: {
+    marginBottom: 20,
+    backgroundColor: "#222",
+    color: "white",
+    padding: "6px 12px",
+    borderRadius: "1rem",
+    border: "none",
+    cursor: "pointer",
+  },
+  teamContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "24px",
+    flexWrap: "wrap",
+  },
+  teamPanel: {
+    flex: 1,
+    minWidth: 250,
+    backgroundColor: "rgba(42, 42, 60, 0.7)",
+    padding: 16,
+    borderRadius: "16px",
+    backdropFilter: "blur(10px)",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
+  },
+  pokemonContainer: {
+    display: "flex",
+    gap: "8px",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  pokemonCard: {
+    textAlign: "center",
+    background: "#1e1e1e",
+    padding: 6,
+    borderRadius: "8px",
+  },
+  pokemonImage: {
+    width: 48,
+    height: 48,
+  },
+  pokemonName: {
+    fontSize: "12px",
+    color: "#F2F2F2",
+  },
+  routePanel: {
+    marginTop: 32,
+    backgroundColor: "rgba(38, 30, 50, 0.75)",
+    padding: "16px",
+    borderRadius: "16px",
+    boxShadow: "0 0 10px rgba(0,0,0,0.3)",
+    backdropFilter: "blur(10px)",
+  },
+  routeHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    fontSize: "1.5rem",
+    color: "#F2F2F2",
+  },
+  inputContainer: {
+    display: "flex",
+    gap: "20px",
+    flexWrap: "wrap",
+  },
+  inputPanel: {
+    flex: 1,
+    minWidth: 220,
+    backgroundColor: "#193057",
+    padding: "12px",
+    borderRadius: "12px",
+    backdropFilter: "blur(5px)",
+  },
+  inputField: {
+    width: "100%",
+    marginBottom: "6px",
+    padding: "6px",
+    background: "#333",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+  },
+  selectField: {
+    width: "100%",
+    marginBottom: "6px",
+    padding: "6px",
+    background: "#333",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+  },
+  pokemonImageSmall: {
+    width: 24,
+    height: 24,
+    marginTop: "4px",
+  },
+  bossPanel: {
+    marginTop: "16px",
+    padding: "12px",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+};
+
+export default App;
